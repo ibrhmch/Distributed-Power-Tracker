@@ -1,6 +1,6 @@
 # Final Project Repository
 
-Team: (PUT YOUR TEAM MEMBERS NAMES HERE)
+Team: (Ch Mohammad Ibrahim, Rylan Moore)
 
 You need to provide us access to your code repository.
 
