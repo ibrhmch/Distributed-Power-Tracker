@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest
+  labels:
+    app: rest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rest
+  template:
+    metadata:
+      labels:
+        app: rest
+    spec:
+      containers:
+      - name: rest-server
+        image: rylanm14/rest-server:latest
+        env:
+        - name: REDIS_HOST
+          value: redis
+        - name: REDIS_PORT
+          value: '6379'
+        - name: MINIO_HOST
+          value: "minio:9000"
+        ports:
+        - containerPort: 5000
+        - containerPort: 6379
+        - containerPort: 9000
