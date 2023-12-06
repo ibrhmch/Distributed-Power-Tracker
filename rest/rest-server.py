@@ -24,6 +24,7 @@ import uuid
 import platform
 import time, shutil
 from minio import Minio
+import csv
 # python3 rest-server.py
 # Initialize the Flask application
 app = Flask(__name__)
@@ -64,73 +65,54 @@ redisPort = os.getenv("REDIS_PORT") or 6379
 # redisClient = redis.StrictRedis(host=redisHost, port=redisPort, db=0)
 redisData = redis.StrictRedis(host=redisHost, port=redisPort, decode_responses=True)
 
+c_year = 0
+c_month = 1
+c_day = 2
+c_hour = 3
+c_minute = 4
+c_generation = 5
+c_capacity = 6
 
 
-@app.route('/newdata/<float:loc_id>/<int:timestamp>', methods=['POST'])
-def separate():
+@app.route('/newdata/<int:loc_id>', methods=['POST'])
+def add_data(loc_id):
     r = request
-    id = uuid.uuid4()
-    print(id)
-    # print(r.data)
-    # response = {'sum' : str( a + b)}
-    try:    
-        song = json.loads(r.data)
-        store = json.dumps(song['callback'])
-        songname = song['callback']['data']['mp3'].split('/')[-1]
-        # print(songname)
-        songdata = base64.b64decode(song['mp3'])
-        
-        # filename = "%s/%s" % str(id), str(songname)
-        filename = "%s/%s" % (str(id), songname)
-        f = open(songname, 'w+b')
-        f.write(songdata)
-        # file_stat = sys.getsizeof(songdata)
-        f.close()
+    data = json.loads(r.data)
+    new_time_data = data['year'] +","+data['month'] +","+data['day']+ ","+data['hour']+"," + data['minute'] + "," + data['generation'] + "," + data['capacity'] + "\n"#setup the csv line. 
+    print("PUT: ", new_time_data)
+    filename = "%s/data.csv" % (str(loc_id))
+    print("FILE: ", filename)
+    response = ""
+    found = False
+    for thing in client.list_objects(bucketname[0], recursive=True):
+        print("File: ", thing.object_name)
+        if filename == thing.object_name:
+            found = True
+            # 
+            try:
+                client.fget_object(bucketname[0], filename, filename)
+                client.remove_object(bucketname[0], filename, None)
+                response = {"status" : "OK"}
+                
+                f = open(filename, "a")
+                f.write(new_time_data)
+                f.close()
+                
+                client.fput_object(bucketname[0], str(filename), str(filename))
+                shutil.rmtree(str(loc_id))
+            except:
+                response = {"status" : "Failure in minio"}
+            break
+    if found == False:
         try:
-            print("NAME OF MP3", filename)
-            redisData.lpush('queue', filename)
-            client.fput_object(bucketname[0], str(filename), f"./{songname}")
-            # print(client.fput_object(bucketname[0], "rest-server.py", f"./rest-server.py"))
-            # print(client.fput_object(bucketname, filename+'-f', songname))
-            os.remove(songname)
+            f = open("data.csv", 'a')
+            f.write(new_time_data)
+            f.close()
+            client.fput_object(bucketname[0], str(filename), f"./data.csv")
+            response = {"status" : "Made new"}
         except:
-            print("File put failed")
-        
-        
-        # client.fput_object(bucketname, songname, f"./{songname}")
-        # print(filename)
-        # for bucket in buckets:
-        #     print(f"Bucket {bucket.name}, created {bucket.creation_date}")
-        #     try:    
-        #         print(f"Objects in {bucket} are originally:")
-        #         for thing in client.list_objects(bucket, recursive=True):
-        #             print(thing.object_name)
-        #     except:
-        #         print("Nothing in bucket", bucket)
-        response = {'status' : 'got song data', 'uid' : str(id)}
-        try:
-            # print(redisData.lpush('request:data', 'mp3:%s test:other' % song['callback']['data']['mp3']))
-            found = False
-            time.sleep(1)
-            for thing in client.list_objects(bucketname[0], recursive=True):
-                # print("Here ",thing.object_name)
-                if str(id) in thing.object_name:
-                    found = True
-            if found == True:
-                print(redisData.lpush('request', '%s' % store))
-            else:
-                print("Data not put into minio correct!!")
-            # print(store)
-            # print(redisData.json().set('request', '$', data))
-            # print(redisData.rpush('QUEUE', *song['callback']))
-            #  print(redisData.lpush('request:data', 'mp3:%s' % song['callback']['data']['mp3']))
-        except:
-            print("Error pushing callback data")
-        # test = redisData.rpop('Callback')
-        # print(test)
-
-    except:
-        response = {'status' : 'error getting song data'}
+            response = {"status" : "Failure creating file in minio"}
+            print("Could not make file in minio")
     response_pickled = jsonpickle.encode(response)
     
     for bucket in buckets:
@@ -144,45 +126,71 @@ def separate():
             pass
     return Response(response=response_pickled, status=200, mimetype="application/json")
 
+#DONE 12/5 will take in location data and give back a UID and push to redis queue named 'mapping'
 @app.route('/newdata/getUID/<float:lat>/<float:lon>', methods=['GET'])
-def queue():
+def queue(lat, lon):
     r = request
+    UID = uuid.uuid4()
+    print(UID)
+    response = ""
     try:
         # response = {'status' : 'got a queue request' , 'data' : redisData.lpop('request:data')}
-        # print(redisData.rpop('QUEUE'))
-        # data = json.loads(redisData.lpop('request'))
-        # response = {'status' : 'got a queue request' , 'queue' : data}
-        queue = redisData.lrange( "queue", 0, -1 )
-        response = {'status' : 'got a queue request' , 'queue' : queue}
+
+        current = redisData.lrange( "mapping", 0, -1 ) #searches redis queue
+        for entry in current:
+            print("Found: ", entry)
+            splits = entry.split('/')
+            print("Broken: ", splits)
+            if lat == float(splits[2]) and lon == float(splits[1]):
+                response = {'status' : 'Location already exists', 'UID' : splits[0]}
+                break
+        if response == "":
+            response = {'status' : 'Location will be added' , 'UID' : int(UID)}
+            redisData.lpush("mapping", "%d/%f/%f" % (UID, lon, lat))
         print(queue)
         # print('test')
     except:
-        response = {'status' : 'error getting out of redis'}
+        response = {'status' : 'Error seeing redis entries'}
     response_pickled = jsonpickle.encode(response)
     return Response(response=response_pickled, status=200, mimetype="application/json")
 
-@app.route('/api/<float:lat>/<float:lon>/<int:timestamp>', methods=['GET'])
-def returndata(UID, tracktype):
-    print("%s/%s" % (UID, tracktype))
-    filepath = "%s/%s.mp3" % (UID, tracktype)
+@app.route('/pulldata/<int:UID>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>', methods=['GET'])
+def returndata(UID, year, month, day, hour, minute):
+    # print("%s/%s" % (UID, tracktype))
+    filepath = "%s/data.csv" % (UID)
     found = False
-    for thing in client.list_objects(bucketname[1], recursive=True):
+    for thing in client.list_objects(bucketname[0], recursive=True):
         # print(thing.object_name)
         if filepath == thing.object_name:
             found = True
     if found:
         try:
-            client.fget_object(bucketname[1], filepath, filepath)
-            response = {"status" : "Found requested file",
-                        "filename" : "%s" % filepath.split('/')[-1] ,
-                        "mp3": base64.b64encode( open(filepath, "rb").read() ).decode('utf-8')}
-            shutil.rmtree(UID)
+            client.fget_object(bucketname[0], filepath, filepath)
+            # response = {"status" : "Found requested file",
+            #             "filename" : "%s" % filepath.split('/')[-1] ,
+            #             "mp3": base64.b64encode( open(filepath, "rb").read() ).decode('utf-8')}
+            with open(filepath, "r") as file:
+                reader = csv.reader(file, delimiter=',')
+                found = False
+                for row in reader:
+                    # print(row[c_year], year)
+                    if row[c_year] == str(year):
+                        if row[c_month] == str(month):
+                            if row[c_day] == str(day):
+                                if int(row[c_hour]) == (hour):
+                                    if int(row[c_minute]) == (minute):
+                                        response = {'status' : 'OK', 'data' : row}
+                                        found = True
+                                        break
+                if found == False:
+                    response = {'status' : 'Not found', 'data' : '' }
+            shutil.rmtree(str(UID))
 
         except:
             print("Could not OPEN file from minio")
             response = {"status" : "Could not OPEN requested file"}
     else:
-        response = {"status" : "Could not FIND requested file"}
+        response = {"status" : "Could not FIND this System"}
     response_pickled = jsonpickle.encode(response)
     return Response(response=response_pickled, status=200, mimetype="application/json")
 
@@ -191,7 +199,25 @@ def returndata(UID, tracktype):
 # print(redisData.set('TEST' , 'testdata'))
 # print(redisData.get('TEST'))   
 
-bucketname=["queue", "output"]
+@app.route('/pulldata/getUID/<float:lat_min>/<float:lat_max>/<float:lon_min>/<float:lon_max>', methods=['GET'])
+def returnuid(lat_min,lat_max,lon_min, lon_max):
+
+    nodes = redisData.lrange( "mapping", 0, -1 )
+    output = []
+    for node in nodes:
+        node = str(node)
+        parts = node.split('/')
+        UID = parts[0]
+        lon = float(parts[1])
+        lat = float(parts[2])
+        if lon > lon_min and lon < lon_max:
+            if lat > lat_min and lat < lat_max:
+                output.append(node)
+    response = { 'status' : "OK", 'nodes' : output}
+    response_pickled = jsonpickle.encode(response)
+    return Response(response=response_pickled, status=200, mimetype="application/json")
+
+bucketname=["location-data"]
 # while True:
 for i in bucketname:
     if not client.bucket_exists(i):

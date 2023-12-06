@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: rest-server
-        image: rylanm14/rest-server:latest
+        image: rylanm14/proj-rest-server:latest
         env:
         - name: REDIS_HOST
           value: redis
