@@ -73,7 +73,7 @@ c_minute = 4
 c_generation = 5
 c_capacity = 6
 
-
+#DONE 12/6 takes in a location id and csv style line in spec format. This is then appended to minio file
 @app.route('/newdata/<int:loc_id>', methods=['POST'])
 def add_data(loc_id):
     r = request
@@ -154,6 +154,7 @@ def queue(lat, lon):
     response_pickled = jsonpickle.encode(response)
     return Response(response=response_pickled, status=200, mimetype="application/json")
 
+#DONE 12/6 will take in UID and a specific time and will return line from csv for that time
 @app.route('/pulldata/<int:UID>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>', methods=['GET'])
 def returndata(UID, year, month, day, hour, minute):
     # print("%s/%s" % (UID, tracktype))
@@ -199,6 +200,7 @@ def returndata(UID, year, month, day, hour, minute):
 # print(redisData.set('TEST' , 'testdata'))
 # print(redisData.get('TEST'))   
 
+#DONE 12/6 will return a list of systems that are in a rectangle (ie map window)
 @app.route('/pulldata/getUID/<float:lat_min>/<float:lat_max>/<float:lon_min>/<float:lon_max>', methods=['GET'])
 def returnuid(lat_min,lat_max,lon_min, lon_max):
 
