@@ -22,18 +22,17 @@ kubectl apply -f psql-deployment.yaml
 kubectl apply -f psql-service.yaml
 ```
 
-## To connect to the database, run:
+## To connect to the database, first forward the port:
 ```bash
 kubectl port-forward service/psql-service 5432:5432
 ```
 
 followed by:
 ```bash
-psql -h localhost -U postgres -d solardata
+psql -h localhost -p 5432 -U postgres -d solardata
 ```
 
-or 
-    
+or you can connect to the pod and run psql from there:
 ```bash
 kubectl exec -it <podname> -- sh
 
