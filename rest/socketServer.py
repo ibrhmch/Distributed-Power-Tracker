@@ -36,21 +36,6 @@ def wait_for_queue(queue_name):
         return None
 
 
-def get_random_solarPanel_data(panel_id="EC1"):
-    conn = psycopg2.connect(
-        dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT
-    )
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY RANDOM() LIMIT 1",
-        (panel_id,),
-    )
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return result[0] if result else None
-
-
 def get_latest_panel_data(panel_id="EC1"):
     conn = psycopg2.connect(
         dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT
@@ -74,7 +59,7 @@ def send_latest_panel_data():
         print("Sending new number:", random_kw)
         if random_kw is not None:
             socketio.emit(
-                "new_number", {"powerKw": str(random_kw), "panelId": panel_id}
+                "NewPanelData", {"powerKw": str(random_kw), "panelId": panel_id}
             )
 
 
