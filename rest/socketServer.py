@@ -25,11 +25,34 @@ def get_random_kwh_value():
         dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT power_kwh FROM solar_panels_data ORDER BY RANDOM() LIMIT 1")
+    cursor.execute("SELECT power_kw FROM solar_panels_data ORDER BY RANDOM() LIMIT 1")
     result = cursor.fetchone()
     cursor.close()
     conn.close()
     return result[0] if result else None
+
+
+def get_random_solarPanel_data(panel_id="EC1"):
+    conn = psycopg2.connect(
+        dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT
+    )
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY RANDOM() LIMIT 1",
+        (panel_id,),
+    )
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return result[0] if result else None
+
+
+def send_random_solarPanel_data(panel_id="EC1"):
+    while True:
+        time.sleep(5)
+        random_kw = get_random_solarPanel_data(panel_id)
+        if random_kw is not None:
+            socketio.emit("new_number", {"number": str(random_kw)})
 
 
 def send_random_number():
@@ -46,5 +69,5 @@ def index():
 
 
 if __name__ == "__main__":
-    threading.Thread(target=send_random_number).start()
+    threading.Thread(target=send_random_solarPanel_data).start()
     socketio.run(app, port=5001)
