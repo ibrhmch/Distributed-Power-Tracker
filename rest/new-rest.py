@@ -1,7 +1,11 @@
 import psycopg2
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+# Enable CORS
+CORS(app)
 
 # Connect to the PostgreSQL database
 conn = psycopg2.connect(
@@ -25,21 +29,26 @@ def get_data():
     # Fetch all rows from the result set
     rows = cur.fetchall()
 
-    # Close the cursor and the database connection
-    cur.close()
-    conn.close()
-
-    # Convert the rows to a list of dictionaries
-    data = []
+    # Convert the rows to a dictionary of dictionaries
+    data = {}
     for row in rows:
-        data.append(
-            {
-                "panel_id": row[0],
-                "name": row[1],
-                "latitude": row[2],
-                "longitude": row[3],
-            }
+        cur.execute(
+            "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY recorded_at DESC LIMIT 1",
+            (row[0],),
         )
+
+        # Fetch the latest power_kw from the result set
+        power_kw = cur.fetchone()
+
+        data[row[0]] = {  # row[0] is the panel_id
+            "name": row[1],
+            "latitude": row[2],
+            "longitude": row[3],
+            "powerKw": power_kw[0] if power_kw else None,
+        }
+
+    # Close the cursor
+    cur.close()
 
     # Return the data as JSON
     return jsonify(data)
