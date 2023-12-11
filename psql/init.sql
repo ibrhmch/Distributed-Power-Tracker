@@ -1,9 +1,3 @@
--- Drop the 'solardata' database if it exists
-DROP DATABASE IF EXISTS solardata;
-
--- Create the 'solardata' database
-CREATE DATABASE solardata;
-
 -- Connect to the 'solardata' database
 \connect solardata;
 
