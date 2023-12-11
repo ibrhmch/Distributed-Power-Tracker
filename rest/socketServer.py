@@ -66,14 +66,16 @@ def get_latest_panel_data(panel_id="EC1"):
     return result[0] if result else None
 
 
-def send_latest_panel_data(panel_id="EC1"):
+def send_latest_panel_data():
     while True:
         panel_id = wait_for_queue("solarPanelData")
         random_kw = get_latest_panel_data(panel_id)
         print("Panel ID:", panel_id)
         print("Sending new number:", random_kw)
         if random_kw is not None:
-            socketio.emit("new_number", {"number": str(random_kw)})
+            socketio.emit(
+                "new_number", {"powerKw": str(random_kw), "panelId": panel_id}
+            )
 
 
 @app.route("/")
