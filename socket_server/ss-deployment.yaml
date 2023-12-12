@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: socket-server-deployment
+spec:
+  replicas: 1  # You can adjust the number of replicas
+  selector:
+    matchLabels:
+      app: socket-server
+  template:
+    metadata:
+      labels:
+        app: socket-server
+    spec:
+      containers:
+      - name: socket-server
+        image: ibrhmch/socket-server:latest
+        ports:
+        - containerPort: 5000  # Port on which the container is listening
