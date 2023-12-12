@@ -14,13 +14,13 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Database connection parameters - update these with your database details
-DB_HOST = "localhost"
+DB_HOST = "postgres-service"
 DB_NAME = "solardata"
 DB_USER = "postgres"
 DB_PASS = "12345678"
-DB_PORT = "5433"
+DB_PORT = "5432"
 
-r = redis.Redis(host="localhost", port=6379, db=0)
+r = redis.Redis(host="redis", port=6379, db=0)
 
 
 def wait_for_queue(queue_name):
@@ -65,9 +65,10 @@ def send_latest_panel_data():
 
 @app.route("/")
 def index():
-    return "Random Number Generator"
+    random_number = random.randint(1, 100)  # Generate a random number
+    return f"Random Number Generator: {random_number}"
 
 
 if __name__ == "__main__":
     threading.Thread(target=send_latest_panel_data).start()
-    socketio.run(app, port=5001)
+    socketio.run(app, port=5000, allow_unsafe_werkzeug=True)
