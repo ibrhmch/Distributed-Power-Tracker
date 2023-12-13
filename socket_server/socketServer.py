@@ -63,7 +63,7 @@ def send_latest_panel_data():
             )
 
 
-@app.route("/socket/random")
+@app.route("/frontend/socket/random")
 def index():
     random_number = random.randint(1, 100)  # Generate a random number
     return f"Random Number Generator: {random_number}"
