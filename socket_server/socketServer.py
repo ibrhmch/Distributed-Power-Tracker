@@ -63,7 +63,7 @@ def send_latest_panel_data():
             )
 
 
-@app.route("/random")
+@app.route("/socket/random")
 def index():
     random_number = random.randint(1, 100)  # Generate a random number
     return f"Random Number Generator: {random_number}"
@@ -71,4 +71,9 @@ def index():
 
 if __name__ == "__main__":
     threading.Thread(target=send_latest_panel_data).start()
-    socketio.run(app, port=os.getenv("SERVER_PORT") or 5001, allow_unsafe_werkzeug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=os.getenv("SERVER_PORT") or 5001,
+        allow_unsafe_werkzeug=True,
+    )
