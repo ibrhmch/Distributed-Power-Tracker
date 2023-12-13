@@ -12,14 +12,14 @@ CORS(app)
 
 # Connect to the PostgreSQL database
 conn = psycopg2.connect(
-    host="localhost",
+    host="postgres-service",
     database="solardata",
     user="postgres",
     password="12345678",
-    port="5433",
+    port="5432",
 )
 
-r = redis.Redis(host="localhost", port=6379, db=0)
+r = redis.Redis(host="redis", port=6379, db=0)
 
 
 # Define the endpoint to retrieve data
@@ -160,4 +160,4 @@ def add_panel_data():
 
 if __name__ == "__main__":
     # Run the Flask application on port 3002
-    app.run(port=3002)
+    app.run(port=5000)
