@@ -161,4 +161,4 @@ def add_panel_data():
 
 if __name__ == "__main__":
     # Run the Flask application on port 3002
-    app.run(port=os.getenv("SERVER_PORT") or 3002)
+    app.run(port=os.getenv("SERVER_PORT") or 3002, host="0.0.0.0", debug=True)
