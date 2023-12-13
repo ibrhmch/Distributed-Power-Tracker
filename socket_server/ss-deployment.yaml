@@ -1,19 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: socket-server-deployment
+  name: socket
 spec:
-  replicas: 1  # You can adjust the number of replicas
+  replicas: 1
   selector:
     matchLabels:
-      app: socket-server
+      app: socket
   template:
     metadata:
       labels:
-        app: socket-server
+        app: socket
     spec:
       containers:
-      - name: socket-server
-        image: ibrhmch/socket-server:latest
+      - name: socket
+        image: ibrhmch/socket:latest
+        env:
+        - name: REDIS_HOST
+          value: "redis"
+        - name: PSQL_HOST
+          value: "postgres"
+        - name: PSQL_PORT
+          value: "5432"
+        - name: SERVER_PORT
+          value: "5000"
         ports:
-        - containerPort: 5000  # Port on which the container is listening
+        - containerPort: 5000
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"

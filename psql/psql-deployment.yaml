@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-deployment
+  name: postgres
 spec:
   replicas: 1
   selector:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: ibrhmch/custom-postgres:latest
+        image: ibrhmch/postgres:latest
         env:
         - name: POSTGRES_PASSWORD
           value: "12345678"

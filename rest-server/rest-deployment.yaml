@@ -1,21 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rest-server-deployment
+  name: rest
   labels:
-    app: rest-server
+    app: rest
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rest-server
+      app: rest
   template:
     metadata:
       labels:
-        app: rest-server
+        app: rest
     spec:
       containers:
-      - name: rest-server
-        image: ibrhmch/rest-server:latest
+      - name: rest
+        image: ibrhmch/rest:latest
+        env:
+        - name: REDIS_HOST
+          value: "redis"
+        - name: PSQL_HOST
+          value: "postgres"
+        - name: PSQL_PORT
+          value: "5432"
+        - name: SERVER_PORT
+          value: "5000"
         ports:
         - containerPort: 5000

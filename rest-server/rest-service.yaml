@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rest-server-service
+  name: rest
 spec:
   type: ClusterIP  # Use NodePort or LoadBalancer to expose outside the cluster
   selector:
-    app: rest-server
+    app: rest
   ports:
   - protocol: TCP
     port: 80

@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 import psycopg2
@@ -12,14 +13,14 @@ CORS(app)
 
 # Connect to the PostgreSQL database
 conn = psycopg2.connect(
-    host="postgres-service",
+    host=os.getenv("PSQL_HOST") or "localhost",
     database="solardata",
     user="postgres",
     password="12345678",
-    port="5432",
+    port=os.getenv("PSQL_PORT") or "5433",
 )
 
-r = redis.Redis(host="redis", port=6379, db=0)
+r = redis.Redis(host=os.getenv("REDIS_HOST") or "localhost", port=6379, db=0)
 
 
 # Define the endpoint to retrieve data
@@ -76,7 +77,7 @@ def get_all_panels_data():
     for panel_id in panel_ids:
         # Execute the query to retrieve the latest power_kw
         cur.execute(
-            "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY data_id ASC LIMIT 1",
+            "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY data_id DESC LIMIT 1",
             (panel_id,),
         )
 
@@ -160,4 +161,4 @@ def add_panel_data():
 
 if __name__ == "__main__":
     # Run the Flask application on port 3002
-    app.run(port=5000)
+    app.run(port=os.getenv("SERVER_PORT") or 3002)

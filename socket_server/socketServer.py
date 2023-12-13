@@ -1,3 +1,4 @@
+import os
 import random
 import threading
 import time
@@ -13,14 +14,16 @@ app.config["SECRET_KEY"] = "secret!"
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Database connection parameters - update these with your database details
-DB_HOST = "postgres-service"
-DB_NAME = "solardata"
-DB_USER = "postgres"
-DB_PASS = "12345678"
-DB_PORT = "5432"
+# Connect to the PostgreSQL database
+conn = psycopg2.connect(
+    host=os.getenv("PSQL_HOST") or "localhost",
+    database="solardata",
+    user="postgres",
+    password="12345678",
+    port=os.getenv("PSQL_PORT") or "5433",
+)
 
-r = redis.Redis(host="redis", port=6379, db=0)
+r = redis.Redis(host=os.getenv("REDIS_HOST") or "localhost", port=6379, db=0)
 
 
 def wait_for_queue(queue_name):
@@ -37,9 +40,6 @@ def wait_for_queue(queue_name):
 
 
 def get_latest_panel_data(panel_id="EC1"):
-    conn = psycopg2.connect(
-        dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST, port=DB_PORT
-    )
     cursor = conn.cursor()
     cursor.execute(
         "SELECT power_kw FROM solar_panels_data WHERE panel_id = %s ORDER BY data_id DESC LIMIT 1",
@@ -47,7 +47,7 @@ def get_latest_panel_data(panel_id="EC1"):
     )
     result = cursor.fetchone()
     cursor.close()
-    conn.close()
+
     return result[0] if result else None
 
 
@@ -71,4 +71,4 @@ def index():
 
 if __name__ == "__main__":
     threading.Thread(target=send_latest_panel_data).start()
-    socketio.run(app, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, port=os.getenv("SERVER_PORT") or 5001, allow_unsafe_werkzeug=True)
