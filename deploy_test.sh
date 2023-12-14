@@ -19,8 +19,8 @@ kubectl apply -f frontend/front-deployment.yaml
 kubectl apply -f frontend/front-service.yaml
 kubectl apply -f frontend/front-ingress.yaml
 
-sleep 5
-kubectl port-forward --address 0.0.0.0 service/frontend 4999:4999 &
-kubectl port-forward --address 0.0.0.0 service/rest 5000:5000 &
-# while true; do kubectl port-forward svc/socket 5001:5001&; done
+# sleep 5
+# kubectl port-forward --address 0.0.0.0 service/frontend 4999:4999 &
+# kubectl port-forward --address 0.0.0.0 service/rest 5000:5000 &
+# # while true; do kubectl port-forward svc/socket 5001:5001&; done
 

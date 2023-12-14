@@ -2,6 +2,12 @@
 
 Team: (Ch Mohammad Ibrahim, Rylan Moore)
 
+Note: all of the images were built on a M1 Macbook Pro, so if you are using a different architecture, you may need to rebuild the images or you can start up the cluster and might have to resort to port forwarding. If that is the case you should uncomment the portforwarding commands in the deploy_test.sh file.
+
+To start up the cluster please run the `./deploy_test.sh` shell file through terminal. You might have to run `chmod +x ./deploy_test.sh` to make it executable. This will start up the cluster and deploy the services.
+
+<hr>
+
 You need to provide us access to your code repository.
 
 If you did not use a github repository during your development, you can simply copy your files into this repository and commit those files as you would normally do.
